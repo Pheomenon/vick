@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package proto.memtable;
+
+message DataSchemas {
+  repeated EntrySchemas es = 1;
+  InfoSchemas info = 2;
+}
+
+message EntrySchemas {
+  fixed32 keyLen = 1;
+  fixed32 valLen = 2;
+  bytes key = 3;
+  bytes val = 4;
+}
+
+message InfoSchemas {
+  uint32 metaOffset = 1;
+  int32 entries = 2;
+  fixed32 minRange = 3;
+  fixed32 maxRange = 4;
+}

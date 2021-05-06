@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package proto.memtable;
+
+message IndexSchemas {
+  repeated PositionSchemas p = 1;
+}
+
+message PositionSchemas {
+  fixed32 crc32 = 1;
+  fixed32 offset = 2;
+}
