@@ -43,6 +43,7 @@ func newMemtable(size int, name uint32) *memtable {
 func (m *memtable) Set(key, value []byte) {
 	m.Lock()
 	defer m.Unlock()
+
 	hash := hashing(key)
 	oldOffset := m.currentOffset
 	keyLen := len(key)
@@ -73,6 +74,7 @@ func (m *memtable) Set(key, value []byte) {
 func (m *memtable) Get(item []byte) ([]byte, bool) {
 	m.RLock()
 	defer m.RUnlock()
+
 	hash := hashing(item)
 	position, ok := m.concurrentMap[hash]
 	if !ok {
@@ -93,9 +95,18 @@ func (m *memtable) Get(item []byte) ([]byte, bool) {
 	return m.buf[start:end], true
 }
 
+func (m *memtable) Del(item []byte) {
+	m.Lock()
+	defer m.Unlock()
+
+	hash := hashing(item)
+	delete(m.concurrentMap, hash)
+}
+
 func (m *memtable) isFull(size int) bool {
 	m.RLock()
 	defer m.RUnlock()
+
 	left := m.size - m.currentOffset
 	if left < size {
 		return false
@@ -103,10 +114,11 @@ func (m *memtable) isFull(size int) bool {
 	return true
 }
 
-func (m *memtable) dump(path string) {
+func (m *memtable) Dump(path string) {
 	m.Lock()
 	defer m.Unlock()
-	dataFp, err := os.Create(fmt.Sprintf("%s/%d.wic", path, m.name))
+
+	dataFp, err := os.Create(fmt.Sprintf("%s/%d.vic", path, m.name))
 	if err != nil {
 		logrus.Errorf("memtable: unable to create file: [%v]", err)
 	}
