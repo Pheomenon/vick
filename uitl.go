@@ -5,5 +5,6 @@ func hashing(key []byte) uint64 {
 	if err != nil {
 		panic("hash error!")
 	}
+	h64.Reset()
 	return h64.Sum64()
 }

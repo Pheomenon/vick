@@ -20,7 +20,7 @@ func (m *MemtableTest) TestOpenMemtable(c *C) {
 	c.Assert(val, DeepEquals, []byte("val1"))
 }
 
-func (m *MemtableTest) TestPersistence() {
+func (m *MemtableTest) TestPersistence(c *C) {
 	db := vick.NewDB(1024, 0)
 	db.Memtable.Set([]byte("Key1"), []byte("val1"))
 	db.Memtable.Dump("./")
