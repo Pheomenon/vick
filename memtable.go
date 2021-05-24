@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"hash/crc32"
 	"math"
 	"os"
 	"sync"
@@ -12,16 +11,17 @@ import (
 
 	proto_memtable "github.com/Pheomenon/vick/proto/schemas/memtable"
 	"github.com/sirupsen/logrus"
+	"github.com/spaolacci/murmur3"
 )
 
-var CrcTable = crc32.MakeTable(crc32.Castagnoli)
+var h64 = murmur3.New64WithSeed(0x00)
 
 type memtable struct {
 	buf           []byte
 	currentOffset int
-	minRange      uint32
-	maxRange      uint32
-	concurrentMap map[uint32]uint32
+	minRange      uint64
+	maxRange      uint64
+	concurrentMap map[uint64]uint32
 	size          int
 	records       uint32
 	name          uint32
@@ -31,13 +31,24 @@ type memtable struct {
 func newMemtable(size int, name uint32) *memtable {
 	return &memtable{
 		buf:           make([]byte, size),
-		concurrentMap: make(map[uint32]uint32, 0),
+		concurrentMap: make(map[uint64]uint32, 0),
 		minRange:      math.MaxUint32,
 		maxRange:      0,
 		name:          name,
 		size:          size,
 		RWMutex:       sync.RWMutex{},
 	}
+}
+
+func (m *memtable) monitor() {
+	//ticker := time.NewTicker(1 * time.Second)
+	//for range ticker {
+	//	if m.isFull() {
+	//		m.Lock()
+	//		defer m.Unlock()
+	//		m.Dump(path)
+	//	}
+	//}
 }
 
 func (m *memtable) Set(key, value []byte) {
@@ -103,12 +114,12 @@ func (m *memtable) Del(item []byte) {
 	delete(m.concurrentMap, hash)
 }
 
-func (m *memtable) isFull(size int) bool {
+func (m *memtable) isFull() bool {
 	m.RLock()
 	defer m.RUnlock()
 
 	left := m.size - m.currentOffset
-	if left < size {
+	if left < m.size {
 		return false
 	}
 	return true
@@ -153,7 +164,7 @@ func (m *memtable) Dump(path string) {
 		m.concurrentMap[hash] = positionRuler
 
 		is.P = append(is.P, &proto_memtable.PositionSchemas{
-			Crc32:  hash,
+			H64:    hash,
 			Offset: position,
 		})
 	}

@@ -17,6 +17,6 @@ message EntrySchemas {
 message InfoSchemas {
   uint32 metaOffset = 1;
   int32 entries = 2;
-  fixed32 minRange = 3;
-  fixed32 maxRange = 4;
+  fixed64 minRange = 3;
+  fixed64 maxRange = 4;
 }
